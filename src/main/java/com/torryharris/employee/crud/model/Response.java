@@ -14,10 +14,10 @@ public class Response {
     headers = new JsonObject().put(HttpHeaders.CONTENT_TYPE.toString(), "application/json");
   }
 
-  public Response(int statusCode, String responsebody, String headers) {
+  public Response(int statusCode, String responsebody, JsonObject headers) {
     this.statusCode=statusCode;
     this.responseBody=responsebody;
-
+    this.headers=headers;
   }
 
 

@@ -9,12 +9,10 @@ public class ResponseCodec implements MessageCodec<Response, Response> {
   public void encodeToWire(Buffer buffer, Response response) {
     JsonObject jsonObject = new JsonObject();
     jsonObject.put("statuscode", response.getStatusCode());
-    jsonObject.put("response", response.getResponseBody());
+    jsonObject.put("responsebody", response.getResponseBody());
     jsonObject.put("header", response.getHeaders());
 
     String jsonTostring = jsonObject.encode();
-    int length = jsonTostring.getBytes().length;
-    buffer.appendInt(length);
     buffer.appendString(jsonTostring);
 
   }
@@ -25,9 +23,9 @@ public class ResponseCodec implements MessageCodec<Response, Response> {
     int length = buffer.getInt(_pos);
     String jsonStr = buffer.getString(_pos+=4, _pos+=length);
     JsonObject contentJson = new JsonObject(jsonStr);
-    int statusCode = contentJson.getInteger("statusCode");
+    int statusCode = contentJson.getInteger("statuscode");
     String responsebody = contentJson.getString("responsebody");
-    String headers = contentJson.getString("headers");
+    JsonObject headers = contentJson.getJsonObject("headers");
 
     return new Response(statusCode, responsebody, headers);
   }
@@ -41,7 +39,7 @@ public class ResponseCodec implements MessageCodec<Response, Response> {
   @Override
   public String name() {
 
-    return this.getClass().getName();
+    return this.getClass().getSimpleName();
   }
 
   @Override

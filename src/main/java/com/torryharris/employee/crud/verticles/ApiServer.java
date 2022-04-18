@@ -1,36 +1,25 @@
 package com.torryharris.employee.crud.verticles;
 
-import com.torryharris.employee.crud.dao.Dao;
 import com.torryharris.employee.crud.model.Employee;
 import com.torryharris.employee.crud.model.Response;
 import com.torryharris.employee.crud.model.ResponseCodec;
 import com.torryharris.employee.crud.util.ConfigKeys;
 import com.torryharris.employee.crud.util.PropertyFileUtils;
 import io.vertx.core.AbstractVerticle;
-import io.vertx.core.Future;
-import io.vertx.core.Handler;
 import io.vertx.core.Promise;
-import io.vertx.core.buffer.Buffer;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.http.HttpHeaders;
 import io.vertx.core.http.HttpServerOptions;
-import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.http.HttpServerResponse;
 import io.vertx.core.json.Json;
-import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
-import io.vertx.ext.web.Route;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
-import io.vertx.ext.web.handler.AuthenticationHandler;
 import io.vertx.ext.web.handler.BodyHandler;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.util.ArrayList;
 import java.util.Base64;
-import java.util.List;
-import java.util.stream.Collectors;
 
 public class ApiServer extends AbstractVerticle {
   private static final Logger logger = LogManager.getLogger(ApiServer.class);
@@ -56,11 +45,8 @@ public class ApiServer extends AbstractVerticle {
       String id = routingContext.request().getParam("id");
       vertx.eventBus().request("response", id, reply -> {
         if (reply.succeeded()) {
-//          HttpServerResponse responses = (HttpServerResponse) reply.result().body();
-//          System.out.println(reply);
-//          responses.end(reply.toString());
-          Response response=(Response)  reply.result().body();
-          routingContext.response().putHeader("content-type","application/json").setStatusCode(200).end(response.toString());
+          Response response = (Response) reply.result().body();
+          routingContext.response().putHeader("content-type", "application/json").setStatusCode(200).end(response.getResponseBody());
         }
       });
     });

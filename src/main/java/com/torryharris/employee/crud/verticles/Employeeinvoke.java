@@ -1,7 +1,5 @@
 package com.torryharris.employee.crud.verticles;
 
-import com.torryharris.employee.crud.model.ResponseCodec;
-import com.torryharris.employee.crud.verticles.Employeeinvoke;
 import com.torryharris.employee.crud.dao.Dao;
 import com.torryharris.employee.crud.dao.impl.EmployeeJdbcDao;
 import com.torryharris.employee.crud.model.Employee;
@@ -10,16 +8,9 @@ import com.torryharris.employee.crud.util.Utils;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
-import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.json.Json;
-import io.vertx.core.json.JsonArray;
-import io.vertx.core.json.JsonObject;
-import io.vertx.ext.web.RoutingContext;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-
-import java.util.ArrayList;
-import java.util.List;
 
 public class Employeeinvoke extends AbstractVerticle {
   private static final Logger LOGGER = LogManager.getLogger(Employeeinvoke.class);
@@ -88,16 +79,21 @@ public class Employeeinvoke extends AbstractVerticle {
     });
 
     vertx.eventBus().consumer("response", message -> {
-      String msg = (String) message.body();
-      employeeDao.get(msg)
+      String id = (String) message.body();
+      Response response = new Response();
+      employeeDao.get(id)
         .future()
         .onSuccess(emp -> {
-          Response response=new Response(200,Json.encode(emp),"*/json");
+          if (emp.isPresent()) {
+            Employee employee = emp.get();
+            response.setStatusCode(200).setResponseBody(Json.encode(employee));
+
+          } else {
+            response.setStatusCode(400).setResponseBody(Utils.getErrorResponse("Employee Id not found").encode());
+          }
           message.reply(response);
         })
         .onFailure(throwable -> {
-            Response res = new Response(401, "Not Found", "application/json");
-            LOGGER.error(res);
             LOGGER.catching(throwable);
           }
         );

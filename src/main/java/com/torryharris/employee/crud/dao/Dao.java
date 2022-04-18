@@ -10,7 +10,7 @@ import java.util.Optional;
 
 public interface Dao<T> {
 
-  Promise<List<T>> get(String id);
+  Promise<Optional<T>> get(String id);
 
   Promise<List<T>> getAll();
 

@@ -6,10 +6,8 @@ import com.torryharris.employee.crud.service.JdbcDbService;
 import com.torryharris.employee.crud.util.ConfigKeys;
 import com.torryharris.employee.crud.util.PropertyFileUtils;
 import com.torryharris.employee.crud.util.QueryNames;
-import com.torryharris.employee.crud.util.Utils;
 import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
-import io.vertx.core.http.HttpServerResponse;
 import io.vertx.jdbcclient.JDBCConnectOptions;
 import io.vertx.jdbcclient.JDBCPool;
 import io.vertx.sqlclient.PoolOptions;
@@ -21,7 +19,6 @@ import org.apache.logging.log4j.Logger;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 public class EmployeeJdbcDao implements Dao<Employee> {
   private static final Logger LOGGER = LogManager.getLogger(EmployeeJdbcDao.class);
@@ -33,30 +30,30 @@ public class EmployeeJdbcDao implements Dao<Employee> {
 
 
   @Override
-  public Promise<List<Employee>> get(String id) {
-    Promise<List<Employee>> promises = Promise.promise();
-    List<Employee> employee = new ArrayList<>();
+  public Promise<Optional<Employee>> get(String id) {
+    Promise<Optional<Employee>> optionalPromise = Promise.promise();
     jdbcPool.preparedQuery(PropertyFileUtils.getQuery(QueryNames.GET_BY_ID))
       .execute(Tuple.of(id))
-      .onSuccess(ctx -> {
-        for (Row row : ctx) {
-          Employee employ = new Employee();
-          employ.setId(row.getLong("id"))
-            .setName(row.getString("name"))
-            .setDesignation(row.getString("designation"))
-            .setSalary(row.getLong("salary"))
-            .setUsername(row.getString("username"))
-            .setPassword(row.getString("password"));
-
-          employee.add(employ);
-          System.out.println(row.getLong("id"));
-          System.out.println(row.getString("name"));
-          System.out.println(row.getString("designation"));
-          System.out.println(row.getLong("salary"));
+      .onSuccess(rowSet -> {
+        Optional<Employee> employeeOptional;
+        if (rowSet.size() == 1) {
+          Employee employee = new Employee();
+          for (Row row : rowSet) {
+            employee.setId(Long.parseLong(id))
+              .setName(row.getString("name"))
+              .setUsername(row.getString("username"))
+              .setDesignation(row.getString("designation"))
+              .setSalary(row.getLong("salary"));
+            break;
+          }
+          employeeOptional = Optional.of(employee);
+        } else {
+          employeeOptional = Optional.empty();
         }
-        promises.tryComplete(employee);
-      });
-    return promises;
+        optionalPromise.tryComplete(employeeOptional);
+      })
+      .onFailure(optionalPromise::tryFail);
+    return optionalPromise;
   }
 
   @Override

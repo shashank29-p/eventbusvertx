@@ -76,7 +76,7 @@ private String password;
 
   @Override
   public String toString() {
-    return "Employee{" +
+    return "{" +
       "uid='" + id + '\'' +
       ", name='" + name + '\'' +
       ", designation='" + designation + '\'' +
